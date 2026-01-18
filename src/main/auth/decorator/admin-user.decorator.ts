@@ -1,5 +1,5 @@
-import { Role } from "generated/prisma/enums";
-import { Roles } from "./roles";
+import { Role } from 'generated/prisma/enums';
+import { Roles } from './roles';
 
 
 export const Admin = () => Roles(Role.ADMIN);

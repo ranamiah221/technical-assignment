@@ -409,6 +409,10 @@ export type OrderOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type StringFieldUpdateOperationsInput = {
+  set?: string
+}
+
 export type EnumOrderStatusFieldUpdateOperationsInput = {
   set?: $Enums.OrderStatus
 }
