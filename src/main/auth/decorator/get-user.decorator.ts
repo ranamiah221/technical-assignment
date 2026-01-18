@@ -18,9 +18,7 @@ export const GetUser = createParamDecorator(
     const user = request.user;
     if (!user) return null;
 
-    // alias 'id' for 'sub'
-    if (data === 'id') return user.sub;
-
+    if (data === 'id') return user.sub; // alias
     return data ? user[data] : user;
   },
 );

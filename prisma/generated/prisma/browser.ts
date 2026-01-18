@@ -18,11 +18,6 @@ export { Prisma }
 export * as $Enums from './enums'
 export * from './enums';
 /**
- * Model Address
- * 
- */
-export type Address = Prisma.AddressModel
-/**
  * Model Order
  * 
  */

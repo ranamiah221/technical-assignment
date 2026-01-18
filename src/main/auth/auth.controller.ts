@@ -5,8 +5,9 @@ import { handleRequest } from '@/common/helpers/handle.request';
 import { RegisterUserDto } from './dto/register.user.dto';
 import { LoginUserDto } from './dto/login.user.dto';
 import { ChangePasswordDto } from './dto/reset.password.dto';
-import { GetUser } from '@/common/decorator/getuser';
+
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GetUser } from './decorator/get-user.decorator';
 
 @Controller('auth')
 export class AuthController {
