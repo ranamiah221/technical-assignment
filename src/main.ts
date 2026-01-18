@@ -17,11 +17,11 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('Truf Managment System')
+    .setTitle('E-commerce Technical Accessment')
     .addBearerAuth()
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, documentFactory, {
+  SwaggerModule.setup('docs', app, documentFactory, {
     swaggerOptions: {
       persistAuthorization: true,
     },

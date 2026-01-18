@@ -13,4 +13,24 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  INITIATED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
 

@@ -1,5 +1,10 @@
-export async function handleRequest(
-  callback: () => Promise<any>,
+interface ErrorResponse {
+  message?: string;
+  statusCode?: number;
+}
+
+export async function handleRequest<T>(
+  callback: () => Promise<T>,
   successMessage = 'Request successful',
 ) {
   try {
@@ -10,10 +15,26 @@ export async function handleRequest(
       message: successMessage,
       data,
     };
-  } catch (error: any) {
-    const message =
-      error?.response?.message || error?.message || 'Something went wrong';
-    const statusCode = error?.status || error?.response?.statusCode || 500;
+  } catch (err: unknown) {
+    let message = 'Something went wrong';
+    let statusCode = 500;
+
+    if (typeof err === 'object' && err !== null) {
+      const e = err as {
+        response?: unknown;
+        message?: string;
+        status?: number;
+      };
+
+      if (e.response && typeof e.response === 'object') {
+        const r = e.response as ErrorResponse;
+        message = r.message ?? message;
+        statusCode = r.statusCode ?? statusCode;
+      } else {
+        message = e.message ?? message;
+        statusCode = e.status ?? statusCode;
+      }
+    }
 
     return {
       statusCode,

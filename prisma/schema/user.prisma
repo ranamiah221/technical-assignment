@@ -1,22 +1,20 @@
 model User {
-  id             String   @id @default(uuid())
-  firstName      String   @db.VarChar(100)
-  lastName       String   @db.VarChar(100)
-  email          String   @unique @db.VarChar(150)
-  phone          String   @unique @db.VarChar(20)
-  zipCode        String   @db.VarChar(10)
-  password       String   @db.VarChar(255)
-  role           Role?    @default(USER)
-  location       String?  @db.VarChar(50)
-  additionalInfo String?  @db.VarChar(255)
-  profilePicture String?  @db.VarChar(255)
-  otp            String?  
-  otpExpiresAt   DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-}
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  phone     String?
+  image     String?
+  role      Role     @default(USER)
+  verified  Boolean  @default(false)
+  IsActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-enum Role {
-  USER
-  ADMIN
+  // Relations
+  orders    Order[]
+  addresses Address[]
+
+  @@index([email])
 }
