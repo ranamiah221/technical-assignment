@@ -3,31 +3,30 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateAuthDto, LoginDto } from './dto/create-auth.dto';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-
 import * as bcrypt from 'bcrypt';
-import { OtpService } from './otp.service';
-import { MailService } from '@/common/mail/mail.service';
+import { RegisterUserDto } from './dto/register.user.dto';
+import { LoginUserDto } from './dto/login.user.dto';
+import { ChangePasswordDto } from './dto/reset.password.dto';
+
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly otpService: OtpService,
-    private readonly mailService: MailService,
-  ) {}
+  ) { }
 
-  async createUser(dto: CreateAuthDto) {
+  async createUser(dto: RegisterUserDto) {
     console.log(dto);
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email, phone: dto.phone },
     });
-    console.log('user: ', user);
-    if (user)
+
+    if (user) {
       throw new BadRequestException('User already exist. please login.');
+    }
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const newuser = await this.prisma.user.create({
       data: {
@@ -43,7 +42,7 @@ export class AuthService {
     return newuser;
   }
 
-  async loginuser(dto: LoginDto) {
+  async loginuser(dto: LoginUserDto) {
     const user = await this.prisma.client.user.findUnique({
       where: {
         email: dto.email,
@@ -52,7 +51,7 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('Invalid User');
 
-    const isPasswordValid = await bcrypt.compare(dto.Password, user.password);
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
     if (!isPasswordValid) throw new UnauthorizedException('Invalid Password');
 
     const payload = {
@@ -72,43 +71,52 @@ export class AuthService {
     };
   }
 
-  async forgetPassword(email: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) throw new UnauthorizedException('Invalid User');
 
-    const otp = await this.otpService.generateOtp(email);
-    await this.mailService.forgetPassOtp(email, otp);
 
-    return {
-      message:
-        'OTP sent to your email. Please verify it to reset your password.',
-    };
-  }
-
-  async verifyForgotOtp(otp: string) {
-    const user = await this.prisma.user.findFirst({
-      where: { otp },
+  async resetPassword(
+    userId: string,
+    dto: ChangePasswordDto,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid OTP');
+      throw new UnauthorizedException('User not found');
     }
 
-    if (!user.otpExpiresAt || user.otpExpiresAt.getTime() < Date.now()) {
-      throw new UnauthorizedException('OTP expired');
+   
+    const isPasswordMatch = await bcrypt.compare(
+      dto.currentPassword,
+      user.password,
+    );
+
+    if (!isPasswordMatch) {
+      throw new BadRequestException('Current password is incorrect');
     }
-    // todo.... otp match or not verify.
 
-    return {
-      message: 'OTP verified successfully. You can now reset password.',
-    };
-  }
+   
+    const isSamePassword = await bcrypt.compare(
+      dto.newPassword,
+      user.password,
+    );
 
-  async resetPassword(password: string) {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (isSamePassword) {
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
+    }
 
-    await this.prisma.user.updateMany({
-      data: { password: hashedPassword },
+    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+      },
     });
+
+    return { message: 'Password changed successfully' };
   }
+
 }
