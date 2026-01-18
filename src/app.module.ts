@@ -4,12 +4,14 @@ import { AuthModule } from './main/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { ProductModule } from './main/product/product.module';
 import { UserModule } from './main/user/user.module';
+import { SeedModule } from './common/seed/seed.module';
 
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    SeedModule,
     AuthModule,
     UserModule,
     ProductModule,

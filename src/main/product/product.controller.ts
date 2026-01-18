@@ -8,13 +8,15 @@ import { handleRequest } from '@/common/helpers/handle.request';
 import { UpdateProductDto } from './dto/update.product.dto';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create.product.dto';
+import { Roles } from '../auth/decorator/roles';
+import { Role } from 'generated/prisma/enums';
 
 @ApiTags('Products')
 @Controller('products')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(private readonly productService: ProductService) { }
 
   // ----- ADMIN ONLY -----
   @Post()
@@ -49,7 +51,7 @@ export class ProductController {
 
   // ----- USER & ADMIN -----
   @Get()
-  @User()
+  @Roles(Role.USER, Role.ADMIN)
   @ApiOperation({ summary: 'Get all products' })
   findAll() {
     return handleRequest(
@@ -59,7 +61,7 @@ export class ProductController {
   }
 
   @Get(':id')
-  @User()
+  @Roles(Role.USER, Role.ADMIN)
   @ApiOperation({ summary: 'Get product details by ID' })
   findOne(@Param('id') id: string) {
     return handleRequest(
