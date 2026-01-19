@@ -1,18 +1,13 @@
 model Payment {
-  id            String          @id @default(uuid())
-  orderId       String          @unique
-  status        PaymentStatus   @default(INITIATED)
-
-  amount        Decimal         @db.Decimal(10, 2)
-  currency      String          @default("usd")
-
-  providerRefId String          // Stripe: payment_intent.id
-  metadata      Json?           // FULL webhook payload / dynamic data
-
-  order         Order           @relation(fields: [orderId], references: [id])
-
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id            String        @id @default(uuid())
+  orderId       String        @unique
+  status        PaymentStatus @default(INITIATED)
+  amount        Decimal       @db.Decimal(10,2)
+  currency      String        @default("usd")
+  providerRefId String        // Stripe payment_intent.id
+  order         Order         @relation(fields: [orderId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   products Product[]
 }

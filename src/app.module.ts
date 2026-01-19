@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ProductModule } from './main/product/product.module';
 import { UserModule } from './main/user/user.module';
 import { SeedModule } from './common/seed/seed.module';
+import { OrderModule } from './main/order/order.module';
 
 
 @Module({
@@ -15,6 +16,7 @@ import { SeedModule } from './common/seed/seed.module';
     AuthModule,
     UserModule,
     ProductModule,
+    OrderModule
   ],
   controllers: [],
   providers: [],
