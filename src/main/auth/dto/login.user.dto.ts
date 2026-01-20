@@ -19,4 +19,3 @@ export class LoginUserDto {
   @MinLength(6)
   password: string;
 }
-

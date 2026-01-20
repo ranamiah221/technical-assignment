@@ -12,22 +12,34 @@ export class UpdateUserDto {
   @IsString()
   lastName?: string;
 
-  @ApiPropertyOptional({ example: 'john@example.com', description: 'Email address' })
+  @ApiPropertyOptional({
+    example: 'john@example.com',
+    description: 'Email address',
+  })
   @IsOptional()
   @IsEmail()
   email?: string;
 
-  @ApiPropertyOptional({ example: '+880123456789', description: 'Phone number' })
+  @ApiPropertyOptional({
+    example: '+880123456789',
+    description: 'Phone number',
+  })
   @IsOptional()
   @IsString()
   phone?: string;
 
-  @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg', description: 'Profile image URL' })
+  @ApiPropertyOptional({
+    example: 'https://example.com/avatar.jpg',
+    description: 'Profile image URL',
+  })
   @IsOptional()
   @IsString()
   image?: string;
 
-  @ApiPropertyOptional({ example: 'Dhaka, Bangladesh', description: 'User location' })
+  @ApiPropertyOptional({
+    example: 'Dhaka, Bangladesh',
+    description: 'User location',
+  })
   @IsOptional()
   @IsString()
   location?: string;
