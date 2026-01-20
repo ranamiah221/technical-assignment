@@ -1,93 +1,195 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import Stripe from 'stripe';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { OrderStatus, PaymentStatus } from 'generated/prisma/enums';
+import { OrderStatus } from 'generated/prisma/enums';
 import { PrismaService } from '@/common/prisma/prisma.service';
-
 
 @Injectable()
 export class OrderService {
-    private stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+  private stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-    constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-    async createOrder(userId: string, dto: CreateOrderDto) {
-        const product = await this.prisma.product.findUnique({
-            where: { id: dto.productId },
-        });
-        if (!product || !product.isActive) throw new NotFoundException('Product not found or inactive');
+  async createOrder(userId: string, dto: CreateOrderDto) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: dto.productId },
+    });
+    if (!product || !product.isActive)
+      throw new NotFoundException('Product not found or inactive');
 
-        if (product.stock < dto.quantity) throw new BadRequestException('Not enough stock');
+    if (product.stock < dto.quantity)
+      throw new BadRequestException('Not enough stock');
 
-        const totalAmount = Number(product.price) * dto.quantity;
+    const totalAmount = Number(product.price) * dto.quantity;
 
-        const order = await this.prisma.order.create({
-            data: {
-                userId,
-                productId: product.id,
-                totalAmount,
-                status: OrderStatus.PENDING,
-            },
-        });
+    const order = await this.prisma.order.create({
+      data: {
+        userId,
+        productId: product.id,
+        totalAmount,
+        status: OrderStatus.PENDING,
+      },
+    });
 
-        return order;
+    return order;
+  }
+
+  async createPaymentIntent(orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        payment: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
     }
 
-
-    async createPaymentIntent(orderId: string) {
-        const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { product: true } });
-        if (!order) throw new NotFoundException('Order not found');
-
-        if (order.status !== OrderStatus.PENDING) throw new BadRequestException('Order already paid or completed');
-
-        const paymentIntent = await this.stripe.paymentIntents.create({
-            amount: Math.round(Number(order.totalAmount) * 100),
-            currency: 'usd',
-            metadata: { orderId: order.id },
-        });
-
-        const payment = await this.prisma.payment.create({
-            data: {
-                orderId: order.id,
-                amount: order.totalAmount,
-                providerRefId: paymentIntent.id,
-                status: PaymentStatus.INITIATED,
-            },
-        });
-
-        return paymentIntent;
+    if (order.status !== 'PENDING') {
+      throw new BadRequestException('Order already processed');
     }
 
-    async handlePaymentSuccess(paymentIntentId: string) {
-        const payment = await this.prisma.payment.findFirst({
-            where: { providerRefId: paymentIntentId },
-            include: { order: true },
-        });
+    const paymentIntent = await this.stripe.paymentIntents.create({
+      amount: Math.round(Number(order.totalAmount) * 100),
+      currency: 'usd',
+      metadata: {
+        orderId: order.id,
+      },
+      automatic_payment_methods: {
+        enabled: true,
+      },
+    });
 
-        if (!payment || !payment.order) throw new NotFoundException('Payment or order not found');
+    await this.prisma.payment.upsert({
+      where: {
+        orderId: order.id,
+      },
+      update: {
+        providerRefId: paymentIntent.id,
+        status: 'PROCESSING',
+      },
+      create: {
+        orderId: order.id,
+        amount: order.totalAmount,
+        currency: 'usd',
+        providerRefId: paymentIntent.id,
+        status: 'INITIATED',
+      },
+    });
 
-        await this.prisma.payment.update({
-            where: { id: payment.id },
-            data: { status: PaymentStatus.SUCCEEDED },
-        });
+    return {
+      clientSecret: paymentIntent.client_secret,
+    };
+  }
 
-        await this.prisma.order.update({
-            where: { id: payment.order.id },
-            data: { status: OrderStatus.PAID },
-        });
+  async handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+    const orderId = paymentIntent.metadata?.orderId;
 
-        const product = await this.prisma.product.findUnique({
-            where: { id: payment.order.productId },
-        });
-
-        if (!product) throw new NotFoundException('Product not found');
-
-        await this.prisma.product.update({
-            where: { id: product.id },
-            data: { stock: product.stock - 1 },
-        });
-
-
-        return { message: 'Payment successful and stock updated' };
+    if (!orderId) {
+      console.error('orderId missing in metadata');
+      return;
     }
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      console.error('Order not found for success webhook');
+      return;
+    }
+
+    if (order.status === 'PAID') return;
+
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'PAID',
+      },
+    });
+
+    console.log(` Order ${orderId} marked as PAID`);
+  }
+  async handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
+    const orderId = paymentIntent.metadata?.orderId;
+
+    if (!orderId) {
+      console.error('orderId missing in metadata');
+      return;
+    }
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      console.error('Order not found for failed webhook');
+      return;
+    }
+
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'FAILED',
+      },
+    });
+
+    console.log(` Order ${orderId} marked as FAILED`);
+  }
+
+  async getAllOrders() {
+    return this.prisma.order.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        product: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getMyOrders(userId: string) {
+    return this.prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        product: true,
+      },
+    });
+  }
+
+  async cancelOrder(orderId: string, userId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.userId !== userId) {
+      throw new ForbiddenException('You cannot cancel this order');
+    }
+
+    if (order.status !== 'PENDING') {
+      throw new BadRequestException('Only PENDING orders can be cancelled');
+    }
+
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'CANCELLED',
+      },
+    });
+  }
 }

@@ -3,18 +3,16 @@ import { PrismaService } from '@/common/prisma/prisma.service';
 import { CreateProductDto } from './dto/create.product.dto';
 import { UpdateProductDto } from './dto/update.product.dto';
 
-
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
   async create(dto: CreateProductDto) {
     return this.prisma.product.create({
       data: {
-        ...dto
+        ...dto,
       },
     });
   }
-
 
   async findAll() {
     return this.prisma.product.findMany({
@@ -23,7 +21,6 @@ export class ProductService {
     });
   }
 
- 
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
@@ -40,7 +37,7 @@ export class ProductService {
     return this.prisma.product.update({
       where: { id },
       data: {
-       ...dto
+        ...dto,
       },
     });
   }

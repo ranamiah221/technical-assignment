@@ -16,12 +16,18 @@ export class UserController {
   @Get()
   @ApiOperation({ summary: 'Get logged-in user profile' })
   getProfile(@GetUser('id') userId: string) {
-    return handleRequest(() => this.userService.getProfile(userId), 'Profile fetched successfully');
+    return handleRequest(
+      () => this.userService.getProfile(userId),
+      'Profile fetched successfully',
+    );
   }
 
   @Patch()
   @ApiOperation({ summary: 'Update logged-in user profile' })
   updateProfile(@GetUser('id') userId: string, @Body() dto: UpdateUserDto) {
-    return handleRequest(() => this.userService.updateProfile(userId, dto), 'Profile updated successfully');
+    return handleRequest(
+      () => this.userService.updateProfile(userId, dto),
+      'Profile updated successfully',
+    );
   }
 }

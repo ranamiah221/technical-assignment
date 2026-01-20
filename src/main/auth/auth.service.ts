@@ -10,13 +10,12 @@ import { RegisterUserDto } from './dto/register.user.dto';
 import { LoginUserDto } from './dto/login.user.dto';
 import { ChangePasswordDto } from './dto/reset.password.dto';
 
-
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async createUser(dto: RegisterUserDto) {
     console.log(dto);
@@ -71,12 +70,7 @@ export class AuthService {
     };
   }
 
-
-
-  async resetPassword(
-    userId: string,
-    dto: ChangePasswordDto,
-  ) {
+  async resetPassword(userId: string, dto: ChangePasswordDto) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -85,7 +79,6 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-   
     const isPasswordMatch = await bcrypt.compare(
       dto.currentPassword,
       user.password,
@@ -95,11 +88,7 @@ export class AuthService {
       throw new BadRequestException('Current password is incorrect');
     }
 
-   
-    const isSamePassword = await bcrypt.compare(
-      dto.newPassword,
-      user.password,
-    );
+    const isSamePassword = await bcrypt.compare(dto.newPassword, user.password);
 
     if (isSamePassword) {
       throw new BadRequestException(
@@ -118,5 +107,4 @@ export class AuthService {
 
     return { message: 'Password changed successfully' };
   }
-
 }

@@ -1,8 +1,17 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 
 import { JwtAuthGuard } from '@/main/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/main/auth/guards/roles.guard';
-import { Admin, User } from '@/main/auth/decorator/admin-user.decorator';
+import { Admin } from '@/main/auth/decorator/admin-user.decorator';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { handleRequest } from '@/common/helpers/handle.request';
 import { UpdateProductDto } from './dto/update.product.dto';
@@ -16,12 +25,12 @@ import { Role } from 'generated/prisma/enums';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   // ----- ADMIN ONLY -----
   @Post()
   @Admin()
-  @ApiOperation({ summary: 'Create a new product' })
+  @ApiOperation({ summary: 'Create a new product: (Admin)' })
   create(@Body() dto: CreateProductDto) {
     return handleRequest(
       () => this.productService.create(dto),
@@ -31,7 +40,7 @@ export class ProductController {
 
   @Patch(':id')
   @Admin()
-  @ApiOperation({ summary: 'Update a product' })
+  @ApiOperation({ summary: 'Update a product (Admin)' })
   update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return handleRequest(
       () => this.productService.update(id, dto),
@@ -41,7 +50,7 @@ export class ProductController {
 
   @Delete(':id')
   @Admin()
-  @ApiOperation({ summary: 'Delete a product' })
+  @ApiOperation({ summary: 'Delete a product (Admin)' })
   remove(@Param('id') id: string) {
     return handleRequest(
       () => this.productService.remove(id),
@@ -52,7 +61,7 @@ export class ProductController {
   // ----- USER & ADMIN -----
   @Get()
   @Roles(Role.USER, Role.ADMIN)
-  @ApiOperation({ summary: 'Get all products' })
+  @ApiOperation({ summary: 'Get all products (User & Admin)' })
   findAll() {
     return handleRequest(
       () => this.productService.findAll(),
@@ -62,7 +71,7 @@ export class ProductController {
 
   @Get(':id')
   @Roles(Role.USER, Role.ADMIN)
-  @ApiOperation({ summary: 'Get product details by ID' })
+  @ApiOperation({ summary: 'Get product details by ID : (User & Admin)' })
   findOne(@Param('id') id: string) {
     return handleRequest(
       () => this.productService.findOne(id),

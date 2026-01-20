@@ -7,7 +7,6 @@ import { UserModule } from './main/user/user.module';
 import { SeedModule } from './common/seed/seed.module';
 import { OrderModule } from './main/order/order.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -16,7 +15,7 @@ import { OrderModule } from './main/order/order.module';
     AuthModule,
     UserModule,
     ProductModule,
-    OrderModule
+    OrderModule,
   ],
   controllers: [],
   providers: [],
