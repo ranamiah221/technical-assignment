@@ -15,7 +15,7 @@ This backend is built using **NestJS**, secured with **JWT authentication**, and
 ## 🌐 Base URL
 
 ```
-/api
+https://technical-assignment-1-g1k1.onrender.com
 ```
 
 ---
