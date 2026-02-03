@@ -2,12 +2,11 @@ model Payment {
   id            String        @id @default(uuid())
   orderId       String        @unique
   status        PaymentStatus @default(INITIATED)
-  amount        Decimal       @db.Decimal(10,2)
+  amount        Decimal       @db.Decimal(10, 2)
   currency      String        @default("usd")
-  providerRefId String        
-  order         Order         @relation(fields: [orderId], references: [id])
+  providerRefId String
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
-
-  products Product[]
+  order         Order         @relation(fields: [orderId], references: [id])
+  products      Product[]     @relation("PaymentToProduct")
 }

@@ -1,20 +1,18 @@
 model User {
   id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
   firstName String?
   lastName  String?
+  email     String   @unique
   phone     String?
-  image     String?
+  password  String
   role      Role     @default(USER)
-  location  String?
-  verified  Boolean  @default(false)
-  IsActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  orders Order[]
+  IsActive  Boolean  @default(true)
+  image     String?
+  verified  Boolean  @default(false)
+  location  String?
+  orders    Order[]
 
   @@index([email])
 }

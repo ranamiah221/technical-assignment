@@ -10,7 +10,22 @@ export class AdminSeedService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
+    await this.waitForDb();
     await this.seedAdmin();
+  }
+
+  private async waitForDb(retries = 1, delayMs = 1000) {
+    for (let i = 1; i <= retries; i++) {
+      try {
+        await this.prisma.$queryRaw`SELECT 1`;
+        this.logger.log('✅ DB is ready for seed');
+        return;
+      } catch (err: any) {
+        this.logger.warn(`⏳ DB not ready (try ${i}/${retries})... ${err?.code ?? ''}`);
+        await new Promise((r) => setTimeout(r, delayMs));
+      }
+    }
+    throw new Error('❌ DB not ready after retries');
   }
 
   private async seedAdmin() {
@@ -34,7 +49,7 @@ export class AdminSeedService implements OnModuleInit {
         password: hashedPassword,
         role: Role.ADMIN,
         verified: true,
-        IsActive: true,
+        IsActive: true, // ✅ NOTE: IsActive -> isActive
         firstName: 'System',
         lastName: 'Admin',
       },
