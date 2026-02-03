@@ -15,7 +15,7 @@ This backend is built using **NestJS**, secured with **JWT authentication**, and
 ## 🌐 Base URL
 
 ```
-/api
+https://technical-assignment-1-g1k1.onrender.com
 ```
 
 ---
@@ -323,5 +323,11 @@ npm run start:dev
 ```
 http://localhost:3000/api/docs
 ```
----
+
+## Payment Flow Explanation
+
+The payment system follows a secure Stripe Payment Intent and webhook-based flow. First, a user creates an order which is stored in the database with the status set to `PENDING`. When the user initiates payment, the backend creates a Stripe Payment Intent for that order, calculates the amount in cents, attaches the `orderId` in the metadata, and returns a `clientSecret` to the frontend. The frontend then uses Stripe Elements or the Payment Element to confirm the payment using this `clientSecret`. At this stage, the payment result is not trusted from the frontend. Once Stripe finishes processing the payment, it sends a signed webhook event to the backend. If the event type is `payment_intent.succeeded`, the backend verifies the webhook signature, retrieves the order using the metadata, and updates the order status to `PAID`. If the event type is `payment_intent.payment_failed`, the backend marks the order as `FAILED`. This webhook-based approach ensures secure, reliable, and idempotent payment confirmation and prevents client-side manipulation.
+
+
+
 
