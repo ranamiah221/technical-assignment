@@ -9,7 +9,7 @@ import { OrderModule } from './main/order/order.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true , envFilePath: '.env',}),
+    ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     SeedModule,
     AuthModule,
